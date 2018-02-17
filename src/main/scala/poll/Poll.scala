@@ -1,0 +1,5 @@
+package poll
+
+class Poll {
+
+}
