@@ -1,5 +1,6 @@
 package commands
 
+import interaction.Writer
 import poll.Poll
 
 import scala.collection.mutable
@@ -12,11 +13,11 @@ object General {
     val poll = new Poll(title, anonymous, view, start, finish)
     val id = poll.hashCode()
     ALLPOLLS.put(id, poll)
-    println(id)
+    Writer.write(id)
   }
 
   def pollList(){
-    println(ALLPOLLS.toList)
+    Writer.write(ALLPOLLS.toList)
   }
 
   def deletePoll(id : Int) {
@@ -27,26 +28,26 @@ object General {
   def startPoll(id : Int) {
     try {
       RUNPOLLS.put(id, ALLPOLLS(id))
-      println("Your poll was jast started, look for feedback!")
+      Writer.write("Your poll was jast started, look for feedback!")
     }
     catch {
-      case e : Exception => println("Some trouble was detected, please try again later!")
+      case e : Exception => Writer.write("Some trouble was detected, please try again later!")
     }
   }
 
   def stopPoll(id : Int) {
     try {
       RUNPOLLS.remove(id)
-      println("Your poll was just finished, that was a great poll!")
+      Writer.write("Your poll was just finished, that was a great poll!")
     }
     catch {
-      case e : Exception => println("Some trouble was detected, please try again later!")
+      case e : Exception => Writer.write("Some trouble was detected, please try again later!")
     }
   }
 
   def pollResult(id : Int){
     // make a beauty :)
-    println(ALLPOLLS(id))
+    Writer.write(ALLPOLLS(id))
   }
 
 }
