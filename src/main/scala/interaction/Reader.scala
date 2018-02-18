@@ -22,8 +22,6 @@ object Reader {
         result.append(tstr)
       }
     }
-    null
+    result
   }
-
-
 }
