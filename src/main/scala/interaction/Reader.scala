@@ -5,30 +5,48 @@ import commands.Command
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
+
 object Reader {
-  private def converter(name: String) : ListBuffer[String] = {
+  private def converter(name: String) : List[String] = {
     var list = ListBuffer[String]()
-    Source.fromFile(name).getLines().foreach(line => list.append(line))
-    list
+    Source.fromFile(name).getLines().toList
+  }
+
+  def createCommands(querry : String) : Command = {
+    val pattern1 = "(/[a-zA-Z_]+)".r
+    val pattern2 = "\\(.*?(\\))+[^( ]*\\)*".r
+//    val pattern3 = "(\\\\n)?(.+(\\\\n)?)*".r
+    val name : String = (pattern1 findAllIn querry).group(1)
+    val params = (pattern2 findAllIn querry)
+      .mkString("#")
+      .split("#")
+      .map(s => {
+        s.drop(1)
+          .dropRight(1)
+          .replace("((","(")
+          .replace("))",")")
+      })
+      .toList
+    //    val smth : String = (pattern findAllIn querry).group(5)
+    new Command(name, params)
   }
 
   def parse(name : String) : ListBuffer[Command] = {
     val list = converter(name)
     var result = ListBuffer[Command]()
     for (i <- list.indices){
-      var tstr = ""
-      if (list(i).startsWith("/")){
-        while (!list(i+1).startsWith("/")){
-          tstr = tstr + list(i)
+      var str = list(i)
+      if (list(i).startsWith("/")) {
+        if (list.length > i + 1) {
+          var j = i+1
+          while (list.length > j && !list(j).startsWith("/")) {
+            str = str + '\n' + list(j)
+            j = j+1
+          }
         }
-        result.append(createCommands(tstr))
+        result.append(createCommands(str))
       }
     }
     result
-  }
-
-  private def createCommands(querry : String) : Command = {
-    val list = querry.split(" ").toList
-    new Command(list(1), list.takeRight(list.length-1))
   }
 }
