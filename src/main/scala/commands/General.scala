@@ -2,15 +2,14 @@ package commands
 
 import java.util.Date
 
+import Repository._
 import interaction.Writer
 import poll.Poll
 
-import scala.collection.mutable
+import scala.util.Try
+
 
 object General {
-  var ALLPOLLS = new mutable.HashMap[String, Poll]()
-  var RUNPOLLS = new mutable.HashMap[String, Poll]()
-
   private def getMonth(month : String) : String = {
     month match {
       case "Jan" => "01"
@@ -30,12 +29,15 @@ object General {
 
   private def getDateTime(input : String) : String ={
     val date = input.split(' ')
-    val output : String = date(3) + ' ' + date(5).drop(2) + ':' + getMonth(date(1)) + ':' + date(2)
-    output
+    date(3) + ' ' + date(5).drop(2) + ':' + getMonth(date(1)) + ':' + date(2)
   }
 
   def createPoll(params : List[String]) : String = {
-    val name = params.head
+    val name = if (params.head != null) params.head else{
+      Writer.write("How should I call your Poll?")
+      return "Your poll wasn't created! Please try again later!"
+    }
+
     var anonymous = true
     var viewType = "afterstop"
     var startTime = getDateTime(new Date().toString)
@@ -43,7 +45,6 @@ object General {
 
     for (a <- params.indices){
       val obj = params(a)
-      println(a, params(a))
       if (a == 1) {
         if (obj != "yes" && obj != "no") {
           Writer.write("Is your poll anonymous or not? Yes or No? Which pill You will choose?")
@@ -86,57 +87,103 @@ object General {
                  startTime : String, stopTime: String ) : String = {
     val poll = new Poll(title, anonymous, viewType, startTime, stopTime)
     val id = poll.hashCode().toString
-    ALLPOLLS.put(id, poll)
+    AllPolls.set(id, poll)
     id
   }
 
   def pollList() : String = {
     try {
-      ALLPOLLS.toList
+      AllPolls.getAll
       "More is better than less, am I right?"
     }
     catch {
-      case e : Exception => "Can You see the list of Your polls? I can't too. But they exists."
+      case _ :Exception => "Can You see the list of Your polls? I can't too. But they exists."
     }
   }
 
   def deletePoll(id : String) : String = {
     try {
-      ALLPOLLS.remove(id)
-      RUNPOLLS.remove(id)
+      AllPolls.remove(id)
+      RunPolls.remove(id)
       "Exterminate! Exterminate! Exterminate!"
     }
     catch {
-      case e: Exception => "Can't exterminate Your poll, it was very strong!"
+      case _ :Exception => "Can't exterminate Your poll, it was very strong!"
     }
   }
 
   def startPoll(id : String) : String = {
     try {
-      RUNPOLLS.put(id, ALLPOLLS(id))
-     "Your poll was jast started, look for feedback!"
+      RunPolls.set(id, AllPolls.get(id))
+      "Your poll was just started, look for feedback!"
     }
     catch {
-      case e : Exception => "Some trouble was detected, please try again later!"
+      case _ :Exception => "Can't start your Poll!Please try again later!"
     }
   }
 
   def stopPoll(id : String) : String = {
     try {
-      RUNPOLLS.remove(id)
+      RunPolls.remove(id)
       "Your poll was just finished, that was a great poll!"
     }
     catch {
-      case e : Exception => "Some trouble was detected, please try again later!"
+      case _ :Exception => "Some trouble was detected, please try again later!"
     }
   }
 
   def pollResult(id : String) : String = {
-    val string = if (ALLPOLLS(id).viewType.eq("continuous")) "just when you wish" else "only when the poll will be over"
-    "Name: " + ALLPOLLS(id).name + "\n" +
-    "Anonymous? " + ALLPOLLS(id).isAnonymous + "\n" +
-    "When can I view results? " + string + "\n" +
-    "It's time to start! " + ALLPOLLS(id).startTime + "\n" +
-    "Your time is up, Poll'y! " + ALLPOLLS(id).startTime
+      AllPolls.get(id).map(p => {
+      if (p.viewType.eq("continuous") || p.isOver) {
+        if (p.isAnonymous) {} ///withoutNames else - with Names
+        ""
+      }
+      else "You can view the result only when the poll will be over"
+    }).get
+  }
+
+  def addQuestion(params : List[String], answers : List[String]) : String = {
+    try {
+      val name = Try(params.head)
+      val qtype = Try(params.last)
+      CurrentPoll.get.inner.set_question(name, qtype, answers)
+      "Success"
+    }
+    catch {
+      case _ : Exception => "Something went wrong"
+    }
+  }
+
+  def begin(id : String) : String = {
+    try {
+      CurrentPoll.set(AllPolls.get(id))
+      "Success"
+    }
+    catch {
+      case _ :Exception => "There is no such Poll"
+    }
+  }
+
+  def end : String = {
+    try {
+      CurrentPoll.set(None)
+      "Success"
+    }
+    catch {
+      case _ :Exception => "It's impossible to catch a fail in this command! But you've done it!"
+    }
+  }
+
+  def view() {
+    Writer.write(CurrentPoll.get)
+    // make a beauty
+  }
+
+//  def deleteQuestion(number : Int) {
+//      CurrentPoll.get.questions.remove_question(number)
+//  }
+
+  def answer() {
+
   }
 }

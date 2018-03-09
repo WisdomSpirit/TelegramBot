@@ -1,12 +1,13 @@
 package commands
 
-import java.util.jar.Pack200.Unpacker
+import scala.util.Try
+import exceptions._
 
-import scala.collection.mutable
 
-class Command(title : String, parameters : List[String]) {
-  val name : String = title
-  val params : List[String] = parameters
+class Command(title : Try[String], parameters : Try[List[String]], rawAnswers : Try[List[String]]) {
+  val name : String = if (title.isSuccess) title.get else ""
+  val params : List[String] = if (parameters.isSuccess) parameters.get else throw ArgumentException
+  val answers : List[String] = if (rawAnswers.isSuccess) rawAnswers.get else throw ArgumentException
 
   def execute() : String = {
     try {
@@ -17,10 +18,17 @@ class Command(title : String, parameters : List[String]) {
         case "/start_poll" => General.startPoll(this.params.head)
         case "/stop_poll" => General.stopPoll(this.params.head)
         case "/result" => General.pollResult(this.params.head)
+        case "/add_question" => General.addQuestion(this.params, answers)
+        case "/begin" => General.begin(this.params.head)
+        case "/end" => General.end(this.params.head)
+//        case "/view" => General.pollResult(this.params.head)
+//        case "/delete_question" => General.pollResult(this.params.head)
+//        case "/answer" => General.pollResult(this.params.head)
       }
     }
     catch {
-      case e : Exception => "Unrecognised command! Say what!?"
+      case e : Exception => throw CommandException
+        "Unrecognised command! Say what!?"
     }
   }
 }
