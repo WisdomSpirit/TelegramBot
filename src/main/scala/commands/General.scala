@@ -39,7 +39,7 @@ object General {
       else
         params.get(1) match {
           case "yes"   => true
-          case "false" => false
+          case "no" => false
           case _ =>
             Writer.write("no such argument")
             throw new CreationException()
