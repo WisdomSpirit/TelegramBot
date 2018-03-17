@@ -24,7 +24,7 @@ class CommandsParser extends JavaTokenParsers {
   def answer : Parser[String] = "[^\t\n ]+".r ^^ (expr => expr)
 
   def create_poll : Parser[List[String]] =
-    create_p ~ poll_name ~ rep(anonymous) ~ rep(view_type) ~ rep(time_start) ~ rep(time_stop) ^^ (expr => expr.)
+    create_p ~ poll_name ~ rep(anonymous) ~ rep(view_type) ~ rep(time_start) ~ rep(time_stop) ^^ (expr => expr._2)
   def list : Parser[String] = list_p ^^ (expr => expr)
   def delete_poll : Parser[(String, Int)] = delete_p ~ id ^^ (expr => (expr._1, expr._2))
   def start_poll : Parser[(String, Int)] = start_p ~ id ^^ (expr => (expr._1, expr._2))
