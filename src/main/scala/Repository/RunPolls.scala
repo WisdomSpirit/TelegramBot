@@ -1,19 +1,21 @@
 package Repository
 
 import poll.Poll
+
 import scala.collection.mutable
+import scala.util.Try
 
 
 object RunPolls {
-  private val P = new mutable.HashMap[String, Poll]()
+  private val P = Map[String, Poll]()
 
-  def get(id : String) : Option[Poll] = P.get(id)
+  def get(id : String) : Try[Poll] = Try{P(id)}
 
-  def set(id : String, poll : Option[Poll]) : Unit = poll.map(p => P.update(id, p))
+  def set(id : String, poll : Try[Poll]) : Unit = poll.map(p => P updated (id, p))
 
-  def set(id : String, poll : Poll) : Unit= P.update(id, poll)
+  def set(id : String, poll : Poll) : Unit= P updated (id, poll)
 
-  def remove(id : String) : Option[Poll] = P.remove(id)
+  def remove(id : String) : Unit = P - id
 
-  def getAll : mutable.HashMap[String, Poll] = P
+  def getAll : Map[String, Poll] = P
 }
