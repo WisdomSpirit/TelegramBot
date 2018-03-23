@@ -3,8 +3,7 @@ package commands
 import java.util.Date
 
 import Repository._
-import exceptions.CreationException
-import interaction.Writer
+import interaction.{ParamsParser, Writer}
 import poll.Poll
 
 import scala.util.Try
@@ -33,47 +32,30 @@ object General {
   }
 
   def createPoll(params: Try[List[String]]): String = {
+    val parser = new ParamsParser()
+
     val name = Try(params.get.head)
+
     val anonymous: Try[Boolean] = Try(
       if (Try(params.get(1)).isFailure) true
-      else
-        params.get(1) match {
-          case "yes"   => true
-          case "no" => false
-          case _ =>
-            Writer.write("no such argument")
-            throw new CreationException()
-        })
+      else parser.parseAll(parser.anonymous, params.get(1)).get
+    )
+
     val viewType: Try[String] = Try(
       if (Try(params.get(2)).isFailure) "afterstop"
-      else
-        params.get(2) match {
-          case e: String if e == "afterstop" || e == "continuous" => e
-          case _: String =>
-            Writer.write("no such argument")
-            throw new CreationException()
-        })
-    val startTime: Try[String] = Try(if (Try(params.get(3)).isFailure)
-      getDateTime(new Date().toString)
-    else
-      params.get(3) match {
-        case e: String
-            if Try("\\d{2}:\\d{2}:\\d{2} \\d{2}:\\d{2}:\\d{2}".r.findAllIn(e)).isSuccess =>
-          e
-        case _: String =>
-          Writer.write("no such argument")
-          throw new CreationException()
-      })
-    val stopTime: Try[String] = Try(if (Try(params.get(4)).isFailure) null
-    else
-      params.get(4) match {
-        case e: String
-            if Try("\\d{2}:\\d{2}:\\d{2} \\d{2}:\\d{2}:\\d{2}".r.findAllIn(e)).isSuccess =>
-          e
-        case _: String =>
-          Writer.write("no such argument")
-          throw new CreationException()
-      })
+      else parser.parseAll(parser.view_type, params.get(2)).get
+    )
+
+    val startTime: Try[String] = Try(
+      if (Try(params.get(3)).isFailure) getDateTime(new Date().toString)
+      else parser.parseAll(parser.time, params.get(3)).get
+    )
+
+    val stopTime: Try[String] = Try(
+      if (Try(params.get(4)).isFailure) "null"
+      else parser.parseAll(parser.time, params.get(3)).get
+    )
+
     if (name.isSuccess && anonymous.isSuccess && viewType.isSuccess &&
         startTime.isSuccess && startTime.isSuccess)
       createPollDaemon(name.get,
@@ -90,14 +72,14 @@ object General {
                                startTime: String,
                                stopTime: String): String = {
     val poll = new Poll(title, anonymous, viewType, startTime, stopTime)
-    val id = poll.hashCode().toString
+    val id = AllPolls.get_id()
     AllPolls.set(id, poll)
     id
   }
 
   def pollList(): String = {
     if (Try(AllPolls.getAll).isSuccess)
-      "More is better than less, am I right?"
+      AllPolls.getAll.toString()
     else
       "Can You see the list of Your polls? I can't too. But they exists."
   }
@@ -110,39 +92,40 @@ object General {
         }.isSuccess)
       "Exterminate! Exterminate! Exterminate!"
     else
-      "Can't exterminate Your poll, it was very strong!"
+      "Can't delete Your Poll, maybe id is not set up!"
   }
 
   def startPoll(id: Try[List[String]]): String = {
     if (Try {
       val n = id.get.head
       RunPolls.set(n, AllPolls.get(n))
-    }.isSuccess) "Your poll was just started, look for feedback!"
+    }.isSuccess)
+      "Your poll was just started, look for feedback!"
     else
-      "Can't start your Poll!Please try again later!"
+      "Can't start your Poll, cuz there's no such Poll!Please try again later!"
   }
 
   def stopPoll(id: Try[List[String]]): String = {
-    if (id.isSuccess) {
-      RunPolls.remove(id.get.head)
+    if (Try (RunPolls.remove(id.get.head)).isSuccess)
       "Your poll was just finished, that was a great poll!"
-    } else {
-      "Some trouble was detected, please try again later!"
+    else {
+      "Cant't stop Your Poll, maybe id is not set up!"
     }
   }
 
   def pollResult(id: Try[List[String]]): String = {
-    if (id.isSuccess) {
+    if (id.isSuccess && AllPolls.get(id.get.head).isSuccess) {
       AllPolls
         .get(id.get.head)
         .map(p => {
           if (p.viewType.eq("continuous") || p.isOver) {
-            if (p.isAnonymous) {} ///withoutNames else - with Names
-            ""
-          } else "You can view the result only when the poll will be over"
+            p.inner.get_result(p.isAnonymous)
+          }
+          else "You can view the result only when the poll will be over"
         })
         .get
-    } else "Some trouble was detected, please try again later!"
+    }
+    else "Some trouble was detected, please try again later!"
   }
 
   def addQuestion(params: Try[List[String]],

@@ -9,13 +9,20 @@ import scala.util.Try
 object AllPolls {
   private var P = Map[String, Poll]()
 
-  def get(id : String) : Try[Poll] = Try{P(id)}
+  private var ID = 0
 
-  def set(id : String, poll : Option[Poll]) : Unit = poll.map(p=>P updated (id, p))
+  def get(id : String) : Try[Poll] = Try{P(id)}
 
   def set(id : String, poll : Poll) : Unit = P updated (id, poll)
 
   def remove(id : String) : Unit = P = P - id
 
   def getAll : Map[String, Poll] = P
+
+  def get_id(): String ={
+    val n = this.ID
+    this.ID += 1
+    n.toString
+  }
+
 }

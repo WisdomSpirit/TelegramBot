@@ -7,7 +7,7 @@ import scala.util.Try
 
 
 object RunPolls {
-  private val P = Map[String, Poll]()
+  private var P = Map[String, Poll]()
 
   def get(id : String) : Try[Poll] = Try{P(id)}
 
