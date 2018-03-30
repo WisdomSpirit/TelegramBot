@@ -53,11 +53,11 @@ object General {
 
     val stopTime: Try[String] = Try(
       if (Try(params.get(4)).isFailure) "null"
-      else parser.parseAll(parser.time, params.get(3)).get
+      else parser.parseAll(parser.time, params.get(4)).get
     )
 
     if (name.isSuccess && anonymous.isSuccess && viewType.isSuccess &&
-        startTime.isSuccess && startTime.isSuccess)
+        startTime.isSuccess && stopTime.isSuccess)
       createPollDaemon(name.get,
                        anonymous.get,
                        viewType.get,
@@ -78,39 +78,36 @@ object General {
   }
 
   def pollList(): String = {
-    if (Try(AllPolls.getAll).isSuccess)
-      AllPolls.getAll.toString()
+    if (AllPolls.getAll.nonEmpty)
+      AllPolls.getAll.toList.sortBy(e => e._1.toInt).mkString("\n")
     else
       "Can You see the list of Your polls? I can't too. But they exists."
   }
 
   def deletePoll(id: Try[List[String]]): String = {
-    if (Try {
-          val n = id.get.head
-          AllPolls.remove(n)
-          RunPolls.remove(n)
-        }.isSuccess)
+    if (id.isSuccess && RunPolls.get(id.get.head).isSuccess || AllPolls.get(id.get.head).isSuccess) {
+      AllPolls.remove(id.get.head)
+      RunPolls.remove(id.get.head)
       "Exterminate! Exterminate! Exterminate!"
+    }
     else
-      "Can't delete Your Poll, maybe id is not set up!"
+      "Can't delete Your Poll, cuz there's no such one!"
   }
 
   def startPoll(id: Try[List[String]]): String = {
-    if (Try {
-      val n = id.get.head
-      RunPolls.set(n, AllPolls.get(n))
-    }.isSuccess)
+    if (id.isSuccess && AllPolls.get(id.get.head).isSuccess) {
+      RunPolls.set(id.get.head, AllPolls.get(id.get.head))
       "Your poll was just started, look for feedback!"
-    else
-      "Can't start your Poll, cuz there's no such Poll!Please try again later!"
+    }
+    else "Can't start your Poll, cuz there's no such one!"
   }
 
   def stopPoll(id: Try[List[String]]): String = {
-    if (Try (RunPolls.remove(id.get.head)).isSuccess)
+    if (id.isSuccess && RunPolls.get(id.get.head).isSuccess) {
+      RunPolls.remove(id.get.head)
       "Your poll was just finished, that was a great poll!"
-    else {
-      "Cant't stop Your Poll, maybe id is not set up!"
     }
+    else "Cant't stop Your Poll, cuz it's not run!"
   }
 
   def pollResult(id: Try[List[String]]): String = {
@@ -130,23 +127,21 @@ object General {
 
   def addQuestion(params: Try[List[String]],
                   answers: Try[List[String]]): String = {
-    if (!params.isSuccess) "Wrong parameters"
-    else if (!answers.isSuccess) "Wrong format of answers"
-    else {
-      val name = Try(params.get.head)
-      val qtype = Try(params.get.last)
-      CurrentPoll.get.inner.set_question(name, qtype, answers.get)
+    val name = Try(params.get.head)
+    val qtype = if (Try(params.get.last).isFailure) "open" else params.get.last
+    if (name.isSuccess && answers.isSuccess) {
+      CurrentPoll.get.inner.set_question(name.get, qtype, answers.get)
       "Success"
     }
+    else "Can't add the question to your Poll"
   }
 
   def begin(id: Try[List[String]]): String = {
-    if (id.isSuccess) {
+    if (id.isSuccess && AllPolls.get(id.get.head).isSuccess) {
       CurrentPoll.set(AllPolls.get(id.get.head))
       "Success"
-    } else {
-      "There is no such Poll"
     }
+    else "There is no such Poll"
   }
 
   def end: String = {

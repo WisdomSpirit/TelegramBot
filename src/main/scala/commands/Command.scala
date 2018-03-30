@@ -6,7 +6,7 @@ import exceptions._
 
 class Command(name : Try[String], params : Try[List[String]], answers : Try[List[String]]) {
   def execute() : String = {
-    if (name.isSuccess) this.name.get match {
+    this.name.getOrElse() match {
       case "/create_poll" => General.createPoll(this.params);
       case "/list" => General.pollList()
       case "/delete_poll" => General.deletePoll(this.params)
@@ -21,6 +21,5 @@ class Command(name : Try[String], params : Try[List[String]], answers : Try[List
 //      case "/answer" => General.pollResult(this.params.head)
       case _ => "Unrecognised command! Say what!?"
     }
-    else "Unrecognised command! Say what!?"
   }
 }

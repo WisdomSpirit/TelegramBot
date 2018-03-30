@@ -11,11 +11,11 @@ object RunPolls {
 
   def get(id : String) : Try[Poll] = Try{P(id)}
 
-  def set(id : String, poll : Try[Poll]) : Unit = poll.map(p => P updated (id, p))
+  def set(id : String, poll : Try[Poll]) : Try[Unit] = Try{P = P updated (id, poll.get)}
 
-  def set(id : String, poll : Poll) : Unit= P updated (id, poll)
+  def set(id : String, poll : Poll) : Unit = P = P updated (id, poll)
 
-  def remove(id : String) : Unit = P - id
+  def remove(id : String) : Unit = P = P - id
 
   def getAll : Map[String, Poll] = P
 }

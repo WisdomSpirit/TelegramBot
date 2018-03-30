@@ -17,7 +17,7 @@ class Poll(title: String,
 
   override def toString : String = {
     val result_string = List(this.name, this.isAnonymous.toString, this.viewType, this.startTime, this.stopTime)
-      .mkString("\n")
+      .mkString(", ")
     result_string
   }
 }

@@ -18,9 +18,9 @@ object Reader {
       val charSet = querry.replaceAll("\\(\\(", "").replaceAll("\\)\\)", "").split("")
       val open_br = charSet.filter(c => c.equals("(")).toList
       val closed_br = charSet.filter(c => c.equals(")")).toList
-      if (open_br.length != closed_br.length) throw new ParserException()
-      val pattern1 = "(/[a-zA-Z_]+)".r
-      val pattern2 = "\\(.*?(\\))+[^( ]*\\)*".r
+      if (open_br.lengthCompare(closed_br.length) != 0) throw new ParserException()
+      val pattern1 = "(/[^ ]+)".r
+      val pattern2 = "\\((.*?(\\))+)*[^()]*\\)".r
       val pattern3 = "\n(\t| )*(.*)\n??".r
 
       val name = Try((pattern1 findAllIn querry).group(1))
