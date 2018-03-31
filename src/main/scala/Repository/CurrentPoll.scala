@@ -2,23 +2,12 @@ package Repository
 
 import poll.Poll
 
-import scala.util.Try
-
 object CurrentPoll {
-  private var P : Poll = null
+  private var P : Option[Poll] = Option.empty
 
-  def get : Poll = P
+  def get : Option[Poll] = P
 
-  def set(poll : Poll) : Unit = P = poll
+  def set(poll : Poll) : Unit = P = Option(poll)
 
-  def set(poll : Try[Poll]): Try[Unit] = {
-    poll.map(p => P = p)
-  }
-
-  def setNone() : Unit = P = null
+  def setNone() : Unit = P = Option.empty
 }
-
-//
-//class CurrentPoll(poll: Poll){
-//  val cPoll : Poll = poll
-//}

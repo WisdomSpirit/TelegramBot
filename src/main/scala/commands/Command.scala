@@ -17,7 +17,7 @@ class Command(name : Try[String], params : Try[List[String]], answers : Try[List
       case "/begin" => General.begin(this.params)
       case "/end" => General.end
       case "/view" => General.view
-//      case "/delete_question" => General.pollResult(this.params.head)
+      case "/delete_question" => General.pollResult(this.params)
 //      case "/answer" => General.pollResult(this.params.head)
       case _ => "Unrecognised command! Say what!?"
     }

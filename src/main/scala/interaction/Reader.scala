@@ -4,7 +4,7 @@ import commands.Command
 import exceptions.ParserException
 
 import scala.io.Source
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 
 
@@ -18,7 +18,7 @@ object Reader {
       val charSet = querry.replaceAll("\\(\\(", "").replaceAll("\\)\\)", "").split("")
       val open_br = charSet.filter(c => c.equals("(")).toList
       val closed_br = charSet.filter(c => c.equals(")")).toList
-      if (open_br.lengthCompare(closed_br.length) != 0) throw new ParserException()
+      if (open_br.lengthCompare(closed_br.length) != 0) Failure(new ParserException)
       val pattern1 = "(/[^ ]+)".r
       val pattern2 = "\\((.*?(\\))+)*[^()]*\\)".r
       val pattern3 = "\n(\t| )*(.*)\n??".r

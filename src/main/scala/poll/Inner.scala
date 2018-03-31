@@ -17,13 +17,17 @@ class Inner {
   def get_votes(numQ: Int, numA: Int): Option[List[String]] =
     inner.get(numQ).flatMap(m => m.values.toList.head.get(numA).map(e => e.values.toList.head))
 
-  def set_question(name: String, qtype: String, answers: List[String]): String = {
+  def set_question(name: String, qtype: String, answers: List[String]): Unit = {
   ???
   }
 
-  def set_answer() {}
+  def set_answer(): Unit = {
+    ???
+  }
 
-  def set_votes() {}
+  def remove_question(number : Int): Unit = {
+  ???
+  }
 
   //  def get_result(isAnonymous : Boolean): String = {
   //    val res_str : String = {
