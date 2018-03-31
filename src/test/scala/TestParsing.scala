@@ -10,12 +10,12 @@ class TestParsing extends FlatSpec {
   {createCommands("/list").get.execute()}
 
   assert(createCommands("/create_poll (fghjkhk((akjdj)))").isSuccess)
-  assertResult("0"){createCommands("/create_poll (name0)").get.execute()}
-  assertResult("1"){createCommands("/create_poll (name ((1))) (yes)").get.execute()}
-  assertResult("2"){createCommands("/create_poll (n a m e 2) (no) (afterstop)").get.execute()}
-  assertResult("3"){createCommands("/create_poll (na((me)) 3) (yes) (continuous) (23:23:23 23:23:23)")
+  assertResult("Success: 0"){createCommands("/create_poll (name0)").get.execute()}
+  assertResult("Success: 1"){createCommands("/create_poll (name ((1))) (yes)").get.execute()}
+  assertResult("Success: 2"){createCommands("/create_poll (n a m e 2) (no) (afterstop)").get.execute()}
+  assertResult("Success: 3"){createCommands("/create_poll (na((me)) 3) (yes) (continuous) (23:23:23 23:23:23)")
     .get.execute()}
-  assertResult("4"){createCommands("/create_poll (name4) (yes) (continuous) (23:23:23 23:23:23)" +
+  assertResult("Success: 4"){createCommands("/create_poll (name4) (yes) (continuous) (23:23:23 23:23:23)" +
     " (25:25:25 25:25:25)").get.execute()}
 
   print(pollList())

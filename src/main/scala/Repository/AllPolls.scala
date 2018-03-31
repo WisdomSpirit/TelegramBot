@@ -9,8 +9,6 @@ import scala.util.Try
 object AllPolls {
   private var P = Map[String, Poll]()
 
-  private var  ID = 0
-
   def get(id : String) : Try[Poll] = Try{P(id)}
 
   def set(id : String, poll : Poll) : Unit = P = P updated(id, poll)
