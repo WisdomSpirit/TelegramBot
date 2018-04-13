@@ -1,5 +1,3 @@
 package exceptions
 
-class RunException extends Exception{
-
-}
+class RunException extends Exception{}
