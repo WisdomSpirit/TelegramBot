@@ -1,45 +1,57 @@
 package parsers
 
-import commands.{Administrator, Command, User}
-import exceptions.ParserException
+import commands.Commands
 
-import scala.util.{Failure, Try}
+import scala.util.{Success, Try}
 
 
 object CommandParser {
-  def parse(msg : String, privileges: String, userID : Int) : Try[Command] = {
-    Try {
-      val charSet = msg.replaceAll("\\(\\(", "").replaceAll("\\)\\)", "").split("")
-      val open_br = charSet.filter(c => c.equals("(")).toList
-      val closed_br = charSet.filter(c => c.equals(")")).toList
-      if (open_br.lengthCompare(closed_br.length) != 0) Failure(new ParserException)
-      val pattern1 = "(/[^ ]+)".r
-      val pattern2 = "\\((.*?(\\))+)*[^()]*\\)".r
-      val pattern3 = "\n(\t| )*(.*)\n??".r
-
-      val name = Try((pattern1 findAllIn msg).group(1))
-
-      val params = Try((pattern2 findAllIn msg)
-        .mkString("#")
-        .split("#")
-        .map(s => {
-          s.drop(1)
-            .dropRight(1)
-            .replace("((", "(")
-            .replace("))", ")")
-        }).toList)
-
-      val answers = Try((pattern3 findAllIn msg)
-        .group(2)
-        .mkString("#")
-        .split("#")
-        .map(s => {
-          s.replace("((", "(")
-            .replace("))", ")")
-        }).toList)
-      if (privileges.eq("Administrator"))
-        Administrator(name, params, answers, userID)
-      else User(name, params, answers, userID)
+  def parse(msg: String, privileges: String, userID: Int): Try[String] = {
+    val name = Try(("/[^ ]+".r findAllIn msg).group(0))
+    val cmd = Commands(userID)
+    val parser = new parsers.ParserCombinators()
+    if (privileges == "Administrator" && name.isSuccess) {
+      name.get match {
+        case "/create_poll" =>
+          Try(parser.parseAll(parser.create_poll,msg.replace(name.get + " ", "")).get).map(p =>
+            cmd.createPoll(p._1, p._2, p._3, p._4, p._5))
+        case "/delete_poll" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+          .map(p => cmd.deletePoll(p))
+        case "/start_poll" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+            .map(p => cmd.startPoll(p))
+        case "/stop_poll" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+            .map(p => cmd.stopPoll(p))
+        case "/begin" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+            .map(p => cmd.begin(p))
+        case "/delete_question" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+            .map(p => cmd.deleteQuestion(p))
+        case "/answer" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+            .map(p => cmd.answer(p))
+        case "/add_question" => Try(parser.parseAll(parser.add_question, msg.replace(name.get + " ", "")).get)
+            .map( p => cmd.addQuestion(p._1, p._2, p._3))
+        case "/end" => Success(cmd.end)
+        case "/view" => Success(cmd.view)
+        case "/list" => Success(cmd.pollList)
+        case _ => Success("Unrecognised command! Say what!?")
+      }
     }
+    else if (privileges == "User" && name.isSuccess){
+      name.get match {
+        case "/create_poll" | "/delete_poll" | "/start_poll"
+             | "/stop_poll" | "/add_question" | "/delete_question" =>
+          Success("You don't have such level of privileges")
+        case "/list" => Success(cmd.pollList)
+        case "/end" => Success(cmd.end)
+        case "/view" => Success(cmd.view)
+        case "/result" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+            .map(p => cmd.pollResult(p))
+        case "/begin" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+            .map(p => cmd.begin(p))
+        case "/answer" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+            .map(p => cmd.answerDaemon(p))
+        case _ => Success("Unrecognised command! Say what!?")
+      }
+    }
+    else Success("Command Sir!")
   }
 }

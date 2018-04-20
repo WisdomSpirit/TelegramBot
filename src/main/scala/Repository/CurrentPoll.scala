@@ -2,14 +2,17 @@ package Repository
 
 import poll.Poll
 
+import scala.util.{Failure, Success, Try}
+
 object CurrentPoll {
-  private var P : Option[Poll] = Option.empty
+  private var P : Map[Int, Poll] = Map()
+  //                userID  Poll
 
-  def get : Option[Poll] = P
+  def get(id : Int): Try[Poll] = P.get(id).map(Success(_)).getOrElse(Failure(new Exception))
 
-  def set(poll : Poll) : Unit = P = Option(poll)
+  def set(id : Int, poll : Poll) : Unit = P = P updated (id, poll)
 
-  def setNone() : Unit = P = Option.empty
+  def setNone(id : Int) : Unit = P = P - id
 }
 
 
@@ -18,11 +21,11 @@ object CurrentPoll {
 //import poll.Poll
 //
 //object CurrentPoll {
-//  private var P : Map[Int, Poll] = Map()
+//  private var P : Option[Poll] = Option.empty
 //
-//  def get(id : Int): Option[Poll] = P.get(id)
+//  def get : Option[Poll] = P
 //
-//  def set(id : Int, poll : Poll) : Unit = P = P updated (id, poll)
+//  def set(poll : Poll) : Unit = P = Option(poll)
 //
-//  def setNone(id : Int) : Unit = P = P - id
+//  def setNone() : Unit = P = Option.empty
 //}

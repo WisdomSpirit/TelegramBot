@@ -6,6 +6,5 @@ case class Poll(name: String,
                 startTime: String,
                 stopTime: String,
                 isRun: Boolean = false,
-                isOver: Boolean = false) {
-  val inner: Inner = new Inner()
-}
+                questions : List[String] = List(),
+                answers : Map[Int, List[String]] = Map[Int, List[String]]())

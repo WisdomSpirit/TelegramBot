@@ -1,6 +1,5 @@
 package Repository
 
-import exceptions.RunException
 import poll.Poll
 
 import scala.util.{Failure, Success, Try}
@@ -9,7 +8,7 @@ object AllPolls {
   private var P = Map[String, Poll]()
 
   def get(id: String): Try[Poll] =
-    P.get(id).map(Success(_)).getOrElse(Failure(new RunException))
+    P.get(id).map(Success(_)).getOrElse(Failure(new Exception))
 
   def set(id: String, poll: Poll): Unit = P = P updated (id, poll)
 
@@ -22,7 +21,15 @@ object AllPolls {
   }
 
   def getRun(id: String): Try[Poll] =
-    P.get(id).filter(_.isRun).map(Success(_)).getOrElse(Failure(new RunException()))
+    P.get(id).filter(_.isRun).map(Success(_)).getOrElse(Failure(new Exception()))
+
+  def contains(poll : Poll) : Boolean = {
+    P.values.toList.contains(poll)
+  }
+
+  def containsRun(poll : Poll) : Boolean = {
+    getAllRun.values.toList.contains(poll)
+  }
 
   def setRun(id: String, poll: Poll): Option[Unit] =
     P.get(id).filter(!_.isRun).map(p => P = P updated(id, p.copy(isRun = true)))
