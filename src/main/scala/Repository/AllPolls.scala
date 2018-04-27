@@ -19,8 +19,8 @@ object AllPolls {
 
   def getAll: Map[Int, Poll] = P
 
-  def get_id(): String = {
-    (if (P.toList.nonEmpty) P.toList.maxBy(_._1)._1.toInt + 1 else 0).toString
+  def get_id(): Int = {
+    if (P.toList.nonEmpty) P.toList.maxBy(_._1)._1.toInt + 1 else 0
   }
 
   def getRun(id: Int): Try[Poll] =

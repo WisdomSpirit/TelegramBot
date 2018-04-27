@@ -30,13 +30,12 @@ case class Commands(userID : Int) {
 //    val date = input.split(' ')
 //    date(3) + ' ' + date(5).drop(2) + ':' + getMonth(date(1)) + ':' + date(2)
 //  }
-  def createPoll(title: String,
-                               anonymous: Boolean,
-                               viewType: String,
-                               startTime: String,
-                               stopTime: String): String = {
-    val poll = Poll(title, anonymous, viewType, startTime, stopTime)
-    val id = AllPolls.get_id()
+  def createPoll(title: String, anonymous: Boolean,
+                                viewType: String,
+                                startTime: String,
+                                stopTime: String): String = {
+  val id = AllPolls.get_id()
+  val poll = Poll(id, title, anonymous, viewType, startTime, stopTime)
     AllPolls.set(id, poll)
     "Success: " + id
   }
@@ -44,7 +43,7 @@ case class Commands(userID : Int) {
   def pollList: String = {
     if (AllPolls.getAll.nonEmpty)
       AllPolls.getAll.toVector.sortBy(e => e._1.toInt).map(e =>
-        e._1 + " => " + e._2.name
+        e._2.id + " => " + e._2.name
           + "\nis anonymous? " + e._2.isAnonymous
           + "\nis it running? " + e._2.isRun
           + "\nis over? " + !e._2.isRun
@@ -100,8 +99,8 @@ case class Commands(userID : Int) {
     if (CurrentPoll.get(userID).isSuccess){
       val cp = CurrentPoll.get(userID).get
       if (!AllPolls.containsRun(cp)) {
-        CurrentPoll.modify(_.get(userID)).using(_ => Try(cp.copy(questions = cp.questions :+ question)))
-        AllPolls.modify(_.get(cp)).using(_ => Try(cp.copy(questions = cp.questions :+ question)))
+        CurrentPoll.set(userID, cp.modify(_.questions).using(_ => cp.questions :+ question))
+        AllPolls.set(cp.id, AllPolls.get(cp).get.modify(_.questions).using(_ => cp.questions :+ question))
         CurrentPoll.get(userID).get.questions.indexOf(question).toString
       }
       else "it's runned, you should bear with it!"
@@ -142,8 +141,8 @@ case class Commands(userID : Int) {
     if (CurrentPoll.get(userID).isSuccess){
       val cp = CurrentPoll.get(userID).get
       if (!AllPolls.containsRun(cp)) {
-        CurrentPoll.modify(_.get(userID)).using(_ => Try(cp.copy(questions = cp.questions.filter(_ != cp.questions(number)))))
-        AllPolls.modify(_.get(cp)).using(_ => Try(cp.copy(questions = cp.questions.filter(_ != cp.questions(number)))))
+        cp.modify(_.questions).using(_ => cp.questions.filter(_ != cp.questions(number)))
+        AllPolls.get(cp).get.modify(_.questions).using(_ => cp.questions.filter(_ != cp.questions(number)))
         "Success"
       }
       else "it's runned, you should bear with it!"

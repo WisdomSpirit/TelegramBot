@@ -1,7 +1,7 @@
 package poll
 
 
-case class Poll(name: String,
+case class Poll(id: Int, name: String,
                 isAnonymous: Boolean,
                 viewType: String,
                 startTime: String,
