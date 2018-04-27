@@ -1,4 +1,7 @@
 package commands
+import com.softwaremill.quicklens._
+
+
 
 import Repository._
 import poll.Poll
@@ -40,7 +43,7 @@ case class Commands(userID : Int) {
 
   def pollList: String = {
     if (AllPolls.getAll.nonEmpty)
-      AllPolls.getAll.toList.sortBy(e => e._1.toInt).map(e =>
+      AllPolls.getAll.toVector.sortBy(e => e._1.toInt).map(e =>
         e._1 + " => " + e._2.name
           + "\nis anonymous? " + e._2.isAnonymous
           + "\nis it running? " + e._2.isRun
@@ -52,7 +55,7 @@ case class Commands(userID : Int) {
       "Can You see the list of Your polls? I can't too. But they exists."
   }
 
-  def deletePoll(id: String): String = {
+  def deletePoll(id: Int): String = {
     if (AllPolls.getRun(id).isSuccess || AllPolls.get(id).isSuccess) {
       AllPolls.remove(id)
       AllPolls.removeRun(id)
@@ -62,7 +65,7 @@ case class Commands(userID : Int) {
       "Can't delete Your Poll, cuz there's no such one!"
   }
 
-  def startPoll(id: String): String = {
+  def startPoll(id: Int): String = {
     if (AllPolls.get(id).isSuccess) {
       AllPolls.setRun(id, AllPolls.get(id).get)
       "Your poll was just started, look for feedback!"
@@ -70,7 +73,7 @@ case class Commands(userID : Int) {
     else "Can't start your Poll, cuz there's no such one!"
   }
 
-  def stopPoll(id: String): String = {
+  def stopPoll(id: Int): String = {
     if (AllPolls.getRun(id).isSuccess) {
       AllPolls.removeRun(id)
       "Your poll was just finished, that was a great poll!"
@@ -78,43 +81,36 @@ case class Commands(userID : Int) {
     else "Cant't stop Your Poll, cuz it's not run!"
   }
 
-  def pollResult(id: String): String = ???
-//    if (AllPolls.get(id).isSuccess) {
-//      AllPolls
-//        .get(id)
-//        .map(p => {
-//          if (p.viewType.eq("continuous") || !p.isRun) {
-//            p.inner.get_result(p.isAnonymous)
-//          }
-//          else "You can view the result only when the poll will be over"
-//        })
-//        .get
-//    }
-//    else "Some trouble was detected, please try again later!"
-//  }
+  def pollResult(id: Int): String = {
+    if (AllPolls.get(id).isSuccess) {
+      AllPolls
+        .get(id)
+        .map(p => {
+          if (p.viewType.eq("continuous") || !p.isRun) {
+            ???
+          }
+          else "You can view the result only when the poll will be over"
+        })
+        .get
+    }
+    else "Some trouble was detected, please try again later!"
+  }
 
-  def addQuestion(qustion: String, qType: String, answers: List[String]): String = {???}
-//    val name = Try(params.head)
-//
-//    val currentPoll = CurrentPoll.get(userID)
-//
-//    val qtype : Try[String] = params.lift(1).fold(Try("open")) { questionType =>
-//      Try(ParamsParser.parseAll(ParamsParser.qtype, questionType).get)
-//    }
-//
-//    (for {
-//      n <- name
-//      cp <- currentPoll
-//      q <- qtype
-//      if !AllPolls.containsRun(cp)
-//    }
-//      yield  "Success: " + cp.inner.set_question(n, q, answers)) match {
-//      case Success(s) => s
-//      case Failure(_) => "Can't add the question to your Poll"
-//    }
-//  }
+  def addQuestion(question: String, qType: String, answers: Vector[String]): String = {
+    if (CurrentPoll.get(userID).isSuccess){
+      val cp = CurrentPoll.get(userID).get
+      if (!AllPolls.containsRun(cp)) {
+        CurrentPoll.modify(_.get(userID)).using(_ => Try(cp.copy(questions = cp.questions :+ question)))
+        AllPolls.modify(_.get(cp)).using(_ => Try(cp.copy(questions = cp.questions :+ question)))
+        CurrentPoll.get(userID).get.questions.indexOf(question).toString
+      }
+      else "it's runned, you should bear with it!"
+    }
+    else "there's no such current poll"
+  }
 
-  def begin(id: String): String = {
+
+  def begin(id: Int): String = {
     if (AllPolls.get(id).isSuccess && CurrentPoll.get(userID).isFailure) {
       CurrentPoll.set(userID, AllPolls.get(id).get)
       "Let's Rock!"
@@ -130,19 +126,32 @@ case class Commands(userID : Int) {
   }
 
   def view: String = {
-    if (CurrentPoll != null) ???
-    else ???
-    //make beauty
+    if (CurrentPoll.get(userID).isSuccess) {
+      val cp = CurrentPoll.get(userID).get
+      cp.name + (for {
+        q <- cp.questions
+        a <- cp.answers.getOrElse(cp.questions.indexOf(q), Vector())
+      } yield q + " => " + a).mkString("\n")
+    }
+    else "There's no current Poll!"
   }
 
-  def deleteQuestion(number : String): String = {???}
-//    val currentPoll = CurrentPoll.get(userID)
-//    if (currentPoll.isSuccess && Try(currentPoll.get.inner.remove_question(number.head.toInt)).isSuccess)
-//      "I ate this for you!"
-//    else "Can't delete this Question, set the right Poll or question!"
-//  }
+  def deleteQuestion(number : Int): String = {
+    val currentPoll = CurrentPoll.get(userID)
+    val question = Try(currentPoll.get.questions(number))
+    if (CurrentPoll.get(userID).isSuccess){
+      val cp = CurrentPoll.get(userID).get
+      if (!AllPolls.containsRun(cp)) {
+        CurrentPoll.modify(_.get(userID)).using(_ => Try(cp.copy(questions = cp.questions.filter(_ != cp.questions(number)))))
+        AllPolls.modify(_.get(cp)).using(_ => Try(cp.copy(questions = cp.questions.filter(_ != cp.questions(number)))))
+        "Success"
+      }
+      else "it's runned, you should bear with it!"
+    }
+    else "Can't delete this Question, set the right Poll or question!"
+  }
 
-  def answerDaemon(params : String) : String = {???}
+//  def answerDaemon(params : String) : String = {???}
 //    val currentPoll : Try[Poll] = CurrentPoll.get(userID)
 //    val idc = Try(params.head.toInt)
 //    val answers = Try(params(1))

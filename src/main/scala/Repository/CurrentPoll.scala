@@ -4,6 +4,7 @@ import poll.Poll
 
 import scala.util.{Failure, Success, Try}
 
+
 object CurrentPoll {
   private var P : Map[Int, Poll] = Map()
   //                userID  Poll

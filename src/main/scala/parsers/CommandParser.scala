@@ -11,24 +11,27 @@ object CommandParser {
     val cmd = Commands(userID)
     val parser = new parsers.ParserCombinators()
     if (privileges == "Administrator" && name.isSuccess) {
+      val message = msg.replace(name.get + " ", "").replace("((", "#$%").replace("))", "%$#")
       name.get match {
         case "/create_poll" =>
-          Try(parser.parseAll(parser.create_poll,msg.replace(name.get + " ", "")).get).map(p =>
+          Try(parser.parseAll(parser.create_poll, message).get).map(p =>
             cmd.createPoll(p._1, p._2, p._3, p._4, p._5))
-        case "/delete_poll" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+        case "/delete_poll" => Try(parser.parseAll(parser.id_number, message).get)
           .map(p => cmd.deletePoll(p))
-        case "/start_poll" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+        case "/start_poll" => Try(parser.parseAll(parser.id_number, message).get)
             .map(p => cmd.startPoll(p))
-        case "/stop_poll" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+        case "/stop_poll" => Try(parser.parseAll(parser.id_number, message).get)
             .map(p => cmd.stopPoll(p))
-        case "/begin" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+        case "/begin" => Try(parser.parseAll(parser.id_number, message).get)
             .map(p => cmd.begin(p))
-        case "/delete_question" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+        case "/delete_question" => Try(parser.parseAll(parser.id_number, message).get)
             .map(p => cmd.deleteQuestion(p))
-        case "/answer" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+        case "/answer" => Try(parser.parseAll(parser.answer, message).get)
             .map(p => cmd.answer(p))
-        case "/add_question" => Try(parser.parseAll(parser.add_question, msg.replace(name.get + " ", "")).get)
+        case "/add_question" => Try(parser.parseAll(parser.add_question, message).get)
             .map( p => cmd.addQuestion(p._1, p._2, p._3))
+        case "/result" => Try(parser.parseAll(parser.id_number, message).get)
+          .map(p => cmd.pollResult(p))
         case "/end" => Success(cmd.end)
         case "/view" => Success(cmd.view)
         case "/list" => Success(cmd.pollList)
@@ -36,6 +39,7 @@ object CommandParser {
       }
     }
     else if (privileges == "User" && name.isSuccess){
+      val message = msg.replace(name.get + " ", "").replace("((", "#$%").replace("))", "#$%")
       name.get match {
         case "/create_poll" | "/delete_poll" | "/start_poll"
              | "/stop_poll" | "/add_question" | "/delete_question" =>
@@ -43,12 +47,12 @@ object CommandParser {
         case "/list" => Success(cmd.pollList)
         case "/end" => Success(cmd.end)
         case "/view" => Success(cmd.view)
-        case "/result" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+        case "/result" => Try(parser.parseAll(parser.id_number, message).get)
             .map(p => cmd.pollResult(p))
-        case "/begin" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
+        case "/begin" => Try(parser.parseAll(parser.id_number,message).get)
             .map(p => cmd.begin(p))
-        case "/answer" => Try(parser.parseAll(parser.id_number, msg.replace(name.get + " ", "")).get)
-            .map(p => cmd.answerDaemon(p))
+        case "/answer" => Try(parser.parseAll(parser.answer, message).get)
+            .map(p => cmd.answer(p))
         case _ => Success("Unrecognised command! Say what!?")
       }
     }
