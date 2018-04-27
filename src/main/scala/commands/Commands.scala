@@ -98,14 +98,19 @@ case class Commands(userID : Int) {
   def addQuestion(question: String, qType: String, answers: Vector[String]): String = {
     if (CurrentPoll.get(userID).isSuccess){
       val cp = CurrentPoll.get(userID).get
+      val modified = cp.modify(_.questions)
+        .using(_ => cp.questions :+ (question, qType))
+        .modify(_.answers)
+        .using(_ => cp.answers :+ answers)
       if (!AllPolls.containsRun(cp)) {
-        CurrentPoll.set(userID, cp.modify(_.questions).using(_ => cp.questions :+ question))
-        AllPolls.set(cp.id, AllPolls.get(cp).get.modify(_.questions).using(_ => cp.questions :+ question))
-        CurrentPoll.get(userID).get.questions.indexOf(question).toString
+        CurrentPoll.set(userID, modified)
+        AllPolls.set(cp.id, modified)
+        val id = CurrentPoll.get(userID).get.questions.length + 1
+        "Success: " + id.toString
       }
-      else "it's runned, you should bear with it!"
+      else "It's already run, You should bear with it!"
     }
-    else "there's no such current poll"
+    else "There's no such current poll"
   }
 
 
@@ -127,22 +132,25 @@ case class Commands(userID : Int) {
   def view: String = {
     if (CurrentPoll.get(userID).isSuccess) {
       val cp = CurrentPoll.get(userID).get
-      cp.name + (for {
+      cp.name + "\n" + (for {
         q <- cp.questions
-        a <- cp.answers.getOrElse(cp.questions.indexOf(q), Vector())
+        a <- cp.answers(cp.questions.indexOf(q))
       } yield q + " => " + a).mkString("\n")
     }
     else "There's no current Poll!"
   }
 
   def deleteQuestion(number : Int): String = {
-    val currentPoll = CurrentPoll.get(userID)
-    val question = Try(currentPoll.get.questions(number))
-    if (CurrentPoll.get(userID).isSuccess){
+    if (Try(CurrentPoll.get(userID).get.questions(number)).isSuccess){
       val cp = CurrentPoll.get(userID).get
+      val question = cp.questions(number)
+      val modified = cp.modify(_.questions)
+        .using(_ => cp.questions.filter(_ != question))
+        .modify(_.answers)
+        .using(_ => cp.answers.filter(_ != cp.answers(number)))
       if (!AllPolls.containsRun(cp)) {
-        cp.modify(_.questions).using(_ => cp.questions.filter(_ != cp.questions(number)))
-        AllPolls.get(cp).get.modify(_.questions).using(_ => cp.questions.filter(_ != cp.questions(number)))
+        CurrentPoll.set(userID, modified)
+        AllPolls.set(cp.id, modified)
         "Success"
       }
       else "it's runned, you should bear with it!"
