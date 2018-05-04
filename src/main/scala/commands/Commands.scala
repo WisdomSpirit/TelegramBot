@@ -98,14 +98,11 @@ case class Commands(userID : Int) {
   def addQuestion(question: String, qType: String, answers: Vector[String]): String = {
     if (CurrentPoll.get(userID).isSuccess){
       val cp = CurrentPoll.get(userID).get
-      val modified = cp.modify(_.questions)
-        .using(_ => cp.questions :+ (question, qType))
-        .modify(_.answers)
-        .using(_ => cp.answers :+ answers)
+      val poll = Poll.set_question(question, qType, answers)(cp)
       if (!AllPolls.containsRun(cp)) {
-        CurrentPoll.set(userID, modified)
-        AllPolls.set(cp.id, modified)
-        val id = CurrentPoll.get(userID).get.questions.length + 1
+        CurrentPoll.set(userID, poll)
+        AllPolls.set(cp.id, poll)
+        val id = CurrentPoll.get(userID).get.questions.indexOf((question, qType))
         "Success: " + id.toString
       }
       else "It's already run, You should bear with it!"
@@ -144,13 +141,10 @@ case class Commands(userID : Int) {
     if (Try(CurrentPoll.get(userID).get.questions(number)).isSuccess){
       val cp = CurrentPoll.get(userID).get
       val question = cp.questions(number)
-      val modified = cp.modify(_.questions)
-        .using(_ => cp.questions.filter(_ != question))
-        .modify(_.answers)
-        .using(_ => cp.answers.filter(_ != cp.answers(number)))
+      val poll = Poll.delete_question(question, number)(cp)
       if (!AllPolls.containsRun(cp)) {
-        CurrentPoll.set(userID, modified)
-        AllPolls.set(cp.id, modified)
+        CurrentPoll.set(userID, poll)
+        AllPolls.set(cp.id, poll)
         "Success"
       }
       else "it's runned, you should bear with it!"
@@ -184,7 +178,9 @@ case class Commands(userID : Int) {
 //    else "WTF&!?"
 //  }
 
-  def answer(answer : String): String = {???}
+  def answer(number: Int, answer : String): String = {
+    ???
+  }
 //    "Success: " + CurrentPoll.get(userID).get.inner.set_answer()
 //  }
 }

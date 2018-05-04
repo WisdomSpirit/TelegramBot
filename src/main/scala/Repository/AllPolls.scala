@@ -41,5 +41,4 @@ object AllPolls {
     P.get(id).filter(_.isRun).map(p => P = P updated(id, p.copy(isRun = false)))
 
   def getAllRun: Map[Int, Poll] = P.filter(e => e._2.isRun)
-
 }

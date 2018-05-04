@@ -7,53 +7,75 @@ import org.scalatest._
 class TestParsing extends FlatSpec {
   val adm = "Administrator"
   val admID = 299755750
-
-  "/create_poll" should "finish right for Administrator" in {
-    assertResult("Success: 0") {
-      parse("/create_poll (name0)", adm, admID).get
+  "/add_question" should "add question to current poll (Admin)" in {
+    assert(parse("/add_question (new question?) (open)" +
+      """
+   ans1
+    ans2
+     asn3""", adm, admID).isFailure)
+    assert(parse("/add_question (question?) (multi)", adm, admID).isFailure)
+    assert(parse("/add_question (question2?) (choice)", adm, admID).isFailure)
+    assert(parse("/add_question (new question?) (wrong) ans1\nans2", adm, admID).isFailure)
+    assert(parse("/add_question", adm, admID).isFailure)
+    assertResult("Success: 0"){
+      parse("/add_question (What's up?) (open)", adm, admID).get
     }
-    assertResult("Success: 1") {
-      parse("/create_poll (name ((1))) (yes)", adm, admID).get
-    }
-    assertResult("Success: 2") {
-      parse("/create_poll (n a m e 2) (no) (afterstop)", adm, admID).get
-    }
-    assertResult("Success: 3") {
-      parse("/create_poll (na((me)) 3) (yes) (continuous) (23:23:23 23:23:23)", adm, admID)
-        .get
-    }
-    assertResult("Success: 4") {
-      parse("/create_poll (name4) (yes) (continuous) (23:23:23 23:23:23)" +
-        " (25:25:25 25:25:25)", adm, admID).get
-    }
-  }
-
-//     print(pollList())
-
-  val usr = "User"
-  val userID = 299755678
-
-  "/begin" should "start working with chosen poll" in {
-    assert(parse("/begin (a)", adm, admID).isFailure)
-    assertResult("There is no such Poll!") {
-      parse("/begin (12)", adm, admID).get
-    }
-    assertResult("Let's Rock!") {
-      parse("/begin (3)", adm, admID).get
-    }
-    assert(CurrentPoll.get(admID) == AllPolls.get("3"))
-    assertResult("You've already begun one Poll!") {
-      parse("/begin (4)", adm, admID).get
-    }
-
-    assertResult("Let's Rock!") {
-      parse("/begin (4)", usr, userID).get
-    }
-    assert(CurrentPoll.get(userID) == AllPolls.get("4"))
-    assertResult("You've already begun one Poll!") {
-      parse("/begin (4)", usr, userID).get
+    assertResult("Success: 1"){
+      parse("/add_question (new question?) (multi)" +
+        """
+ans1
+ans2
+ans3""", adm, admID).get
     }
   }
+
+
+  //  "/create_poll" should "finish right for Administrator" in {
+//    assertResult("Success: 0") {
+//      parse("/create_poll (name0)", adm, admID).get
+//    }
+//    assertResult("Success: 1") {
+//      parse("/create_poll (name ((1))) (yes)", adm, admID).get
+//    }
+//    assertResult("Success: 2") {
+//      parse("/create_poll (n a m e 2) (no) (afterstop)", adm, admID).get
+//    }
+//    assertResult("Success: 3") {
+//      parse("/create_poll (na((me)) 3) (yes) (continuous) (23:23:23 23:23:23)", adm, admID)
+//        .get
+//    }
+//    assertResult("Success: 4") {
+//      parse("/create_poll (name4) (yes) (continuous) (23:23:23 23:23:23)" +
+//        " (25:25:25 25:25:25)", adm, admID).get
+//    }
+//  }
+//
+////     print(pollList())
+//
+//  val usr = "User"
+//  val userID = 299755678
+//
+//  "/begin" should "start working with chosen poll" in {
+//    assert(parse("/begin (a)", adm, admID).isFailure)
+//    assertResult("There is no such Poll!") {
+//      parse("/begin (12)", adm, admID).get
+//    }
+//    assertResult("Let's Rock!") {
+//      parse("/begin (3)", adm, admID).get
+//    }
+//    assert(CurrentPoll.get(admID) == AllPolls.get("3"))
+//    assertResult("You've already begun one Poll!") {
+//      parse("/begin (4)", adm, admID).get
+//    }
+//
+//    assertResult("Let's Rock!") {
+//      parse("/begin (4)", usr, userID).get
+//    }
+//    assert(CurrentPoll.get(userID) == AllPolls.get("4"))
+//    assertResult("You've already begun one Poll!") {
+//      parse("/begin (4)", usr, userID).get
+//    }
+//  }
 }
 
 //  "/list" should "be empty on start" in {
