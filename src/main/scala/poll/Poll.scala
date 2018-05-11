@@ -1,12 +1,14 @@
 package poll
+import com.github.nscala_time.time.Imports._
+
 import com.softwaremill.quicklens._
 
 
 case class Poll(id: Int, name: String,
                 isAnonymous: Boolean,
                 viewType: String,
-                startTime: String,
-                stopTime: String,
+                startTime: Option[DateTime],
+                stopTime: Option[DateTime],
                 isRun: Boolean = false,
                 isOver: Boolean = false,
                 questions : Vector[(String, String)] = Vector(),

@@ -2,6 +2,7 @@ package parsers
 import scala.util.Properties
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
+
 object ParserCombinators extends RegexParsers {
   override val whiteSpace: Regex = " +".r
 

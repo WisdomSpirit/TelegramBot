@@ -1,45 +1,36 @@
 package commands
 import Repository._
 import poll.Poll
+import com.github.nscala_time.time.Imports._
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 case class Commands(userID : Int) {
-  //  private def getMonth(month: String): String = {
-  //    month match {
-  //      case "Jan" => "01"
-  //      case "Feb" => "02"
-  //      case "Mar" => "03"
-  //      case "Apr" => "04"
-  //      case "May" => "05"
-  //      case "Jun" => "06"
-  //      case "Jul" => "07"
-  //      case "Aug" => "08"
-  //      case "Sep" => "09"
-  //      case "Oct" => "10"
-  //      case "Nov" => "11"
-  //      case "Dec" => "12"
-  //    }
-  //  }
+  private def formatTime(time: String) : Try[Option[DateTime]] = {
+    if (time != null)
+      Try(Some(DateTimeFormat.forPattern("hh:mm:ss yy:mm:dd").parseDateTime(time)))
+    else Success(None)
+  }
 
-  //  private def getDateTime(input: String): String = {
-  //    val date = input.split(' ')
-  //    date(3) + ' ' + date(5).drop(2) + ':' + getMonth(date(1)) + ':' + date(2)
-  //  }
   def createPoll(title: String, anonymous: Boolean,
                  viewType: String,
                  startTime: String,
                  stopTime: String): String = {
     val id = AllPolls.get_id()
-    AllPolls.set(id, Poll(id, title, anonymous, viewType, startTime, stopTime))
-    "Success: " + id
+    val fStartTime = formatTime(startTime)
+    val fStopTime = formatTime(stopTime)
+    if (fStartTime.isSuccess && fStopTime.isSuccess) {
+      AllPolls.set(id, Poll(id, title, anonymous, viewType, fStartTime.get, fStopTime.get))
+      "Success: " + id
+    }
+    else "Your time is broken!"
   }
 
   def pollList: String = {
     if (AllPolls.getAll.nonEmpty)
       AllPolls.getAll.toVector.sortBy(e => e._1.toInt).map(e =>
         s"${e._2.id} => ${e._2.name}\nis anonymous? ${e._2.isAnonymous}\nis it running? ${e._2.isRun}"
-          + s"\nis over? ${!e._2.isRun}\n${e._2.viewType}\nstarts in: ${e._2.startTime}\nends in: ${e._2.stopTime}")
+          + s"\nis over? ${!e._2.isRun}\n${e._2.viewType}\nstarts in: ${e._2.startTime.get}\nends in: ${e._2.stopTime}")
         .mkString("\n\n")
     else
       "Can You see the list of Your polls? I can't too. But they exists."
@@ -53,8 +44,8 @@ case class Commands(userID : Int) {
   }
 
   def startPoll(id: Int): String = {
-    if (AllPolls.get(id).isSuccess && AllPolls.get(id).get.startTime == null) {
-      AllPolls.setRun(id, AllPolls.get(id).get)
+    if (AllPolls.get(id).isSuccess && AllPolls.get(id).get.startTime.isEmpty) {
+      AllPolls.setRun(id)
       "Your poll was just started, look for feedback!"
     } else if (AllPolls.get(id).isFailure)
       "Can't start your Poll, cuz there's no such one!"

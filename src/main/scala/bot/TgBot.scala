@@ -49,5 +49,8 @@ Here is a list of commands you need to make your Poll Great again:
     }
   }
 
+  val timer = new Thread(timers.PollTimer)
+  timer.setDaemon(true)
+  timer.start()
   TgBot.run()
 }
