@@ -2,7 +2,7 @@ package parsers
 import scala.util.Properties
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
-class ParserCombinators extends RegexParsers {
+object ParserCombinators extends RegexParsers {
   override val whiteSpace: Regex = " +".r
 
   def id_number : Parser[Int] = "(" ~> "\\d+".r <~ ")" ^^ (_.toInt)
@@ -11,7 +11,7 @@ class ParserCombinators extends RegexParsers {
   def question_type : Parser[String] = "(" ~> "(open)|(choice)|(multi)".r <~ ")"
   def answers : Parser[String] = Properties.lineSeparator ~> ".+".r
   def add_question : Parser[(String, String, Vector[String])] =
-    question ~ question_type.? ~ answers.? ^^
+    question ~ question_type.? ~ rep(answers) ^^
       (expr => {
         val question = expr._1._1.replace("#$%", "(").replace("%$#", ")")
         val qtype = if (expr._1._2.nonEmpty) expr._1._2.head else "open"
